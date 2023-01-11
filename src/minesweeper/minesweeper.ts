@@ -121,18 +121,19 @@ export class Minesweeper {
 
     for (let i = 0; i < width; i++) {
       for (let j = 0; j < height; j++) {
-        if (this.board[j][i] === boardState.mine) {
-          for (let k = -1; k <= 1; k++) {
-            for (let l = -1; l <= 1; l++) {
-              if (
-                i + k >= 0 &&
-                i + k < width &&
-                j + l >= 0 &&
-                j + l < height &&
-                this.board[j + l][i + k] !== boardState.mine
-              ) {
-                this.board[j + l][i + k]++;
-              }
+        if (this.board[j][i] !== boardState.mine) {
+          continue;
+        }
+        for (let k = -1; k <= 1; k++) {
+          for (let l = -1; l <= 1; l++) {
+            if (
+              i + k >= 0 &&
+              i + k < width &&
+              j + l >= 0 &&
+              j + l < height &&
+              this.board[j + l][i + k] !== boardState.mine
+            ) {
+              this.board[j + l][i + k]++;
             }
           }
         }
