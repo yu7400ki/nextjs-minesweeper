@@ -34,6 +34,8 @@ export const displayState = {
 } as const;
 
 export type DisplayState = (typeof displayState)[keyof typeof displayState];
+// ------------------------------------------------
+
 // Minesweeper ------------------------------------
 export class Minesweeper {
   public gameStatus: GameStatus;
