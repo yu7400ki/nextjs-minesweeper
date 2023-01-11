@@ -5,7 +5,7 @@ import styles from "../styles/Home.module.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const Home = () => {
+const Home = () => {
   return (
     <>
       <Head>
@@ -121,3 +121,5 @@ export const Home = () => {
     </>
   );
 };
+
+export default Home;
