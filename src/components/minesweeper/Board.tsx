@@ -41,7 +41,11 @@ export const Board = () => {
   };
 
   return (
-    <BoardContainer width={width} height={height}>
+    <BoardContainer
+      width={width}
+      height={height}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {board.flat().map((cell, idx) => {
         switch (cell) {
           case displayState.hidden:
