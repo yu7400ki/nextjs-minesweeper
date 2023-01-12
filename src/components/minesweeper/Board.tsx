@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useMinesweeper } from "@/hooks/minesweeper";
 import { displayState } from "@/minesweeper/minesweeper";
-import { HiddenTile } from "./hiddenTile";
+import { HiddenTile } from "./HiddenTile";
 import { RevealedTile } from "./RevealedTile";
 
 const BoardContainer = styled.div<{ width: number; height: number }>`
