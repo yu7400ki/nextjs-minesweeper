@@ -1,5 +1,11 @@
 import { Board } from "@/components/minesweeper/Board";
+import { Status } from "@/components/minesweeper/Status";
 
 export const Index = () => {
-  return <Board />;
+  return (
+    <>
+      <Status />
+      <Board />
+    </>
+  );
 };

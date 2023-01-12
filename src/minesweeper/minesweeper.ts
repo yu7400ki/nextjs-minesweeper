@@ -154,6 +154,10 @@ export class Minesweeper {
     return clone;
   }
 
+  public get status(): GameStatus {
+    return this.gameStatus;
+  }
+
   public isMine(x: number, y: number): boolean {
     return this.board[y][x] === boardState.mine;
   }
