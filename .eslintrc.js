@@ -31,6 +31,7 @@ module.exports = {
     "import",
   ],
   rules: {
+    "@typescript-eslint/no-non-null-assertion": "off",
     "react/react-in-jsx-scope": "off",
     "prefer-arrow/prefer-arrow-functions": [
       "error",

@@ -38,7 +38,7 @@ export type DisplayState = (typeof displayState)[keyof typeof displayState];
 
 // Minesweeper ------------------------------------
 export class Minesweeper {
-  public gameStatus: GameStatus;
+  private gameStatus: GameStatus;
   private flagged: boolean[][];
   private hidden: boolean[][];
   private board: BoardState[][];
@@ -58,6 +58,62 @@ export class Minesweeper {
     this.width = width;
     this.height = height;
     this.mineNum = mineNum;
+  }
+
+  public reveal(x: number, y: number): Minesweeper {
+    const clone = this.clone();
+
+    if (clone.gameStatus === gameStatus.notStarted) {
+      clone.initBoard(x, y);
+      clone.gameStatus = gameStatus.inProgress;
+    }
+
+    if (clone.gameStatus !== gameStatus.inProgress) {
+      return clone;
+    }
+
+    if (clone.flagged[y][x] || !this.hidden[y][x]) {
+      return clone;
+    }
+
+    clone.hidden[y][x] = false;
+    if (clone.isMine(x, y)) {
+      clone.gameStatus = gameStatus.lost;
+      clone.revealMines();
+      return clone;
+    }
+
+    if (clone.isEmpty(x, y)) {
+      const queue = [[x, y]];
+      while (queue.length > 0) {
+        const [x, y] = queue.pop()!;
+        for (let k = -1; k <= 1; k++) {
+          for (let l = -1; l <= 1; l++) {
+            if (
+              x + k >= 0 &&
+              x + k < clone.width &&
+              y + l >= 0 &&
+              y + l < clone.height &&
+              clone.hidden[y + l][x + k]
+            ) {
+              clone.hidden[y + l][x + k] = false;
+              if (clone.isEmpty(x + k, y + l)) {
+                queue.push([x + k, y + l]);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (clone.isWon()) {
+      clone.gameStatus = gameStatus.won;
+      clone.flagMines();
+    }
+
+    clone.removeRevealedFlag();
+
+    return clone;
   }
 
   public toggleFlag(x: number, y: number): Minesweeper {
@@ -96,6 +152,38 @@ export class Minesweeper {
     clone.hidden = this.hidden.map((row) => row.slice());
     clone.board = this.board.map((row) => row.slice());
     return clone;
+  }
+
+  public isMine(x: number, y: number): boolean {
+    return this.board[y][x] === boardState.mine;
+  }
+
+  public isEmpty(x: number, y: number): boolean {
+    return this.board[y][x] === boardState.empty;
+  }
+
+  public isWon(): boolean {
+    return this.hidden.every((row, y) =>
+      row.every((cell, x) => cell === this.isMine(x, y))
+    );
+  }
+
+  private flagMines(): void {
+    this.flagged = this.flagged.map((row, y) =>
+      row.map((cell, x) => cell || this.isMine(x, y))
+    );
+  }
+
+  private revealMines(): void {
+    this.hidden = this.hidden.map((row, y) =>
+      row.map((cell, x) => !(!cell || this.isMine(x, y)))
+    );
+  }
+
+  private removeRevealedFlag(): void {
+    this.flagged = this.flagged.map((row, y) =>
+      row.map((cell, x) => cell && this.hidden[y][x])
+    );
   }
 
   private initBoard(x: number, y: number): void {
