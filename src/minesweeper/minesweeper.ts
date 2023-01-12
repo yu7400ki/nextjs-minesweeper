@@ -111,7 +111,7 @@ export class Minesweeper {
       clone.flagMines();
     }
 
-    clone.removeRevealedFlag();
+    clone.removeRevealedFlags();
 
     return clone;
   }
@@ -178,9 +178,10 @@ export class Minesweeper {
     this.hidden = this.hidden.map((row, y) =>
       row.map((cell, x) => cell && !this.isMine(x, y))
     );
+    this.removeRevealedFlags();
   }
 
-  private removeRevealedFlag(): void {
+  private removeRevealedFlags(): void {
     this.flagged = this.flagged.map((row, y) =>
       row.map((cell, x) => cell && this.hidden[y][x])
     );
