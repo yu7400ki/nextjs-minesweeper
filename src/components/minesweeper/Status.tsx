@@ -54,7 +54,7 @@ const ThreeDigit = ({ number }: { number: number }) => {
     hundreds = "9";
   } else {
     ones = String(number % 10) as DigitNumProps["number"];
-    tens = String(Math.floor(number / 10)) as DigitNumProps["number"];
+    tens = String(Math.floor(number / 10) % 10) as DigitNumProps["number"];
     hundreds = String(Math.floor(number / 100)) as DigitNumProps["number"];
   }
 
