@@ -42,6 +42,7 @@ export class Minesweeper {
   private flagged: boolean[][];
   private hidden: boolean[][];
   private board: BoardState[][];
+  private elapsedTime: number;
   readonly width: number;
   readonly height: number;
   readonly mineNum: number;
@@ -58,6 +59,13 @@ export class Minesweeper {
     this.width = width;
     this.height = height;
     this.mineNum = mineNum;
+    this.elapsedTime = 0;
+
+    setInterval(() => {
+      if (this.gameStatus === gameStatus.inProgress) {
+        this.elapsedTime++;
+      }
+    }, 100);
   }
 
   public reveal(x: number, y: number): Minesweeper {
@@ -151,11 +159,23 @@ export class Minesweeper {
     clone.flagged = this.flagged.map((row) => row.slice());
     clone.hidden = this.hidden.map((row) => row.slice());
     clone.board = this.board.map((row) => row.slice());
+    clone.elapsedTime = this.elapsedTime;
     return clone;
   }
 
   public get status(): GameStatus {
     return this.gameStatus;
+  }
+
+  public get flagCount(): number {
+    return this.flagged.reduce(
+      (count, row) => count + row.filter((cell) => cell).length,
+      0
+    );
+  }
+
+  public get elapsed(): number {
+    return Math.floor(this.elapsedTime / 10);
   }
 
   public isMine(x: number, y: number): boolean {

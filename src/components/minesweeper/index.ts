@@ -1,3 +1,4 @@
 import { Board } from "./Board";
+import { Status } from "./Status";
 
-export { Board };
+export { Board, Status };

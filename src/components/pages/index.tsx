@@ -1,5 +1,4 @@
-import { Board } from "@/components/minesweeper/Board";
-import { Status } from "@/components/minesweeper/Status";
+import { Board, Status } from "@/components/minesweeper";
 
 export const Index = () => {
   return (
