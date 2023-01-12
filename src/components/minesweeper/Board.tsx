@@ -1,7 +1,8 @@
 import styled from "styled-components";
 import { useMinesweeper } from "@/hooks/minesweeper";
 import { displayState } from "@/minesweeper/minesweeper";
-import type { DisplayState } from "@/minesweeper/minesweeper";
+import { HiddenTile } from "./hiddenTile";
+import { RevealedTile } from "./RevealedTile";
 
 const BoardContainer = styled.div<{ width: number; height: number }>`
   width: ${(props) => props.width * 40}px;
@@ -10,74 +11,10 @@ const BoardContainer = styled.div<{ width: number; height: number }>`
   grid-template-columns: repeat(${(props) => props.width}, 1fr);
   grid-template-rows: repeat(${(props) => props.height}, 1fr);
   background-color: #c0c0c0;
-  border-top: 0.2em solid #808080;
-  border-left: 0.2em solid #808080;
-  border-bottom: 0.2em solid #ffffff;
-  border-right: 0.2em solid #ffffff;
-`;
-
-const HiddenTile = styled.div<{ flagged: boolean }>`
-  width: 100%;
-  height: 100%;
-  background-color: #c0c0c0;
-  border-top: 4px solid #ffffff;
-  border-left: 4px solid #ffffff;
-  border-bottom: 4px solid #808080;
-  border-right: 4px solid #808080;
-  position: relative;
-  &:after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 30px;
-    height: 30px;
-    pointer-events: none;
-    ${(props) =>
-      props.flagged &&
-      `
-      background-image: url("minesweeper.png");
-      background-position: -270px 0;
-      background-size: auto 100%;
-      `}
-  }
-`;
-
-const RevealedTile = styled.div<{ state: DisplayState }>`
-  width: 100%;
-  height: 100%;
-  background-color: #c0c0c0;
-  border: 1px solid #818181;
-  position: relative;
-  &:after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 30px;
-    height: 30px;
-    pointer-events: none;
-    ${(props) => {
-      switch (props.state) {
-        case displayState.empty:
-          return ``;
-        case displayState.mine:
-          return `
-          background-image: url("minesweeper.png");
-          background-position: -300px 0;
-          background-size: auto 100%;
-          `;
-        default:
-          return `
-          background-image: url("minesweeper.png");
-          background-position: -${(props.state - 1) * 30}px 0;
-          background-size: auto 100%;
-          `;
-      }
-    }}
-  }
+  border-top: 4px solid #808080;
+  border-left: 4px solid #808080;
+  border-bottom: 4px solid #ffffff;
+  border-right: 4px solid #ffffff;
 `;
 
 export const Board = () => {
