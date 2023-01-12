@@ -176,7 +176,7 @@ export class Minesweeper {
 
   private revealMines(): void {
     this.hidden = this.hidden.map((row, y) =>
-      row.map((cell, x) => !(!cell || this.isMine(x, y)))
+      row.map((cell, x) => cell && !this.isMine(x, y))
     );
   }
 
