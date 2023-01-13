@@ -1,4 +1,3 @@
-import { Board } from "./Board";
-import { Status } from "./Status";
+import { Game } from "./Game";
 
-export { Board, Status };
+export { Game };
