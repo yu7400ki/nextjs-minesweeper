@@ -40,6 +40,10 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm i
+      - name: Build App
+        run: pnpm build
+        env:
+          NODE_ENV: production
       - name: Export App
         run: pnpm export
       - name: Setup Pages
