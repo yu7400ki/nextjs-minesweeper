@@ -43,6 +43,7 @@ export class Minesweeper {
   private hidden: boolean[][];
   private board: BoardState[][];
   private elapsedTime: number;
+  private timerId: number;
   readonly width: number;
   readonly height: number;
   readonly mineNum: number;
@@ -61,11 +62,13 @@ export class Minesweeper {
     this.mineNum = mineNum;
     this.elapsedTime = 0;
 
-    setInterval(() => {
-      if (this.gameStatus === gameStatus.inProgress) {
-        this.elapsedTime++;
-      }
-    }, 100);
+    this.timerId = Number(
+      setInterval(() => {
+        if (this.gameStatus === gameStatus.inProgress) {
+          this.elapsedTime++;
+        }
+      }, 100)
+    );
   }
 
   public reveal(x: number, y: number): Minesweeper {
@@ -190,6 +193,10 @@ export class Minesweeper {
     return this.hidden.every((row, y) =>
       row.every((cell, x) => cell === this.isMine(x, y))
     );
+  }
+
+  public clearTimer(): void {
+    clearInterval(this.timerId);
   }
 
   private flagMines(): void {
