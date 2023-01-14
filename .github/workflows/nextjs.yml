@@ -45,7 +45,7 @@ jobs:
       - name: Build App
         run: pnpm build
         env:
-          URL_PREFIX: ${{ steps.repository.outputs.name }}
+          URL_PREFIX: /${{ steps.repository.outputs.name }}
       - name: Export App
         run: pnpm export
       - name: Setup Pages
