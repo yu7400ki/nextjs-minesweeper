@@ -49,7 +49,7 @@ export class Minesweeper {
   readonly mineNum: number;
 
   constructor(width: number, height: number, mineNum: number) {
-    if (width * height < mineNum) {
+    if (width * height < mineNum + 1) {
       throw new Error("Too many mines");
     }
 
