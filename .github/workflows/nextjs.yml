@@ -40,10 +40,12 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm i
+      - id: repository
+        run: echo "name=${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}" >> $GITHUB_OUTPUT
       - name: Build App
         run: pnpm build
         env:
-          NODE_ENV: production
+          URL_PREFIX: ${{ steps.repository.outputs.name }}
       - name: Export App
         run: pnpm export
       - name: Setup Pages

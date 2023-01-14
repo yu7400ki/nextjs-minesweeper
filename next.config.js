@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 
-const assetPrefix =
-  process.env.NODE_ENV === "production" ? "/next-minesweeper" : "";
+const assetPrefix = process.env.URL_PREFIX ?? "";
 
 const nextConfig = {
   reactStrictMode: true,
