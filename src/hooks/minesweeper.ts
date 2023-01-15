@@ -11,8 +11,7 @@ export const useMinesweeper = () => {
   const [minesweeper, setMinesweeper] = useAtom(minesweeperAtom);
 
   const reset = () => {
-    minesweeper.clearTimer();
-    const newMinesweeper = new Minesweeper(width, height, mines);
+    const newMinesweeper = minesweeper.reset();
     setMinesweeper(newMinesweeper);
   };
 

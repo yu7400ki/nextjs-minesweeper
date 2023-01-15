@@ -49,27 +49,26 @@ export type CoverState = (typeof coverState)[keyof typeof coverState];
 // Minesweeper ------------------------------------
 export class Minesweeper {
   private gameStatus: GameStatus;
-  private cover: CoverState[][];
-  private board: BoardState[][];
+  private cover: CoverState[];
+  private board: BoardState[];
   private elapsedTime: number;
   private timerId: number;
   readonly width: number;
   readonly height: number;
-  readonly mineNum: number;
+  readonly mines: number;
 
-  constructor(width: number, height: number, mineNum: number) {
-    if (width * height < mineNum + 1) {
+  constructor(width: number, height: number, mines: number) {
+    if (width * height < mines + 1) {
       throw new Error("Too many mines");
     }
 
     this.gameStatus = gameStatus.notStarted;
-    this.cover = array2d(width, height, coverState.hidden);
-    this.board = array2d(width, height, boardState.empty);
+    this.cover = Array(width * height).fill(coverState.hidden);
+    this.board = Array(width * height).fill(boardState.empty);
     this.width = width;
     this.height = height;
-    this.mineNum = mineNum;
+    this.mines = mines;
     this.elapsedTime = 0;
-
     this.timerId = Number(
       setInterval(() => {
         if (this.gameStatus === gameStatus.inProgress) {
@@ -79,11 +78,11 @@ export class Minesweeper {
     );
   }
 
-  public reveal(x: number, y: number): Minesweeper {
+  public reveal(idx: number): Minesweeper {
     const clone = this.clone();
 
     if (clone.gameStatus === gameStatus.notStarted) {
-      clone.initBoard(x, y);
+      clone.initBoard(idx);
       clone.gameStatus = gameStatus.inProgress;
     }
 
@@ -91,33 +90,37 @@ export class Minesweeper {
       return clone;
     }
 
-    if (clone.isFlagged(x, y) || clone.isRevealed(x, y)) {
+    if (clone.isFlagged(idx) || clone.isRevealed(idx)) {
       return clone;
     }
 
-    clone.cover[y][x] = coverState.revealed;
-    if (clone.isMine(x, y)) {
+    clone.cover[idx] = coverState.revealed;
+    if (clone.isMine(idx)) {
       clone.gameStatus = gameStatus.lost;
       clone.revealMines();
       return clone;
     }
 
-    if (clone.isEmpty(x, y)) {
-      const queue = [[x, y]];
-      while (queue.length > 0) {
-        const [x, y] = queue.pop()!;
-        for (let k = -1; k <= 1; k++) {
-          for (let l = -1; l <= 1; l++) {
+    const width = clone.width;
+    const height = clone.height;
+    if (clone.isEmpty(idx)) {
+      const stack = [idx];
+      while (stack.length > 0) {
+        const idx = stack.pop()!;
+        for (const k of [-width, 0, width]) {
+          for (const l of [-1, 0, 1]) {
+            const pos = idx + k + l;
+            const x = idx % width;
             if (
-              x + k >= 0 &&
-              x + k < clone.width &&
-              y + l >= 0 &&
-              y + l < clone.height &&
-              clone.isHidden(x + k, y + l)
+              pos >= 0 &&
+              pos < width * height &&
+              (x !== 0 || l !== -1) &&
+              (x !== width - 1 || l !== 1) &&
+              clone.isHidden(pos)
             ) {
-              clone.cover[y + l][x + k] = coverState.revealed;
-              if (clone.isEmpty(x + k, y + l)) {
-                queue.push([x + k, y + l]);
+              clone.cover[pos] = coverState.revealed;
+              if (clone.isEmpty(pos)) {
+                stack.push(pos);
               }
             }
           }
@@ -133,20 +136,20 @@ export class Minesweeper {
     return clone;
   }
 
-  public toggleFlag(x: number, y: number): Minesweeper {
+  public toggleFlag(idx: number): Minesweeper {
     const clone = this.clone();
 
     if (clone.gameStatus === gameStatus.notStarted) {
-      clone.initBoard(x, y);
+      clone.initBoard(idx);
       clone.gameStatus = gameStatus.inProgress;
     }
 
-    switch (clone.cover[y][x]) {
+    switch (clone.cover[idx]) {
       case coverState.hidden:
-        clone.cover[y][x] = coverState.flagged;
+        clone.cover[idx] = coverState.flagged;
         break;
       case coverState.flagged:
-        clone.cover[y][x] = coverState.hidden;
+        clone.cover[idx] = coverState.hidden;
         break;
       default:
         break;
@@ -156,125 +159,110 @@ export class Minesweeper {
   }
 
   public clone(): Minesweeper {
-    const clone = new Minesweeper(this.width, this.height, this.mineNum);
+    const clone = new Minesweeper(this.width, this.height, this.mines);
     clone.gameStatus = this.gameStatus;
-    clone.cover = this.cover.map((row) => row.slice());
-    clone.board = this.board.map((row) => row.slice());
+    clone.cover = this.cover.slice();
+    clone.board = this.board.slice();
     clone.elapsedTime = this.elapsedTime;
     return clone;
   }
 
-  public get display(): DisplayState[][] {
-    return this.board.map((row, y) =>
-      row.map((cell, x) => {
-        if (this.isHidden(x, y)) {
-          return this.isFlagged(x, y)
-            ? displayState.flagged
-            : displayState.hidden;
-        } else {
-          return cell;
-        }
-      })
-    );
+  public reset(): Minesweeper {
+    clearInterval(this.timerId);
+    return new Minesweeper(this.width, this.height, this.mines);
+  }
+
+  public get display(): DisplayState[] {
+    return this.board.map((cell, idx) => {
+      if (this.isHidden(idx)) {
+        return this.isFlagged(idx) ? displayState.flagged : displayState.hidden;
+      } else {
+        return cell;
+      }
+    });
   }
 
   public get status(): GameStatus {
     return this.gameStatus;
   }
 
-  public get flagCount(): number {
-    return this.cover.reduce(
-      (count, row) =>
-        count + row.filter((cell) => cell === coverState.flagged).length,
-      0
-    );
+  public get flags(): number {
+    return this.cover.filter((cell) => cell === coverState.flagged).length;
   }
 
   public get elapsed(): number {
     return Math.floor(this.elapsedTime / 10);
   }
 
-  public isMine(x: number, y: number): boolean {
-    return this.board[y][x] === boardState.mine;
+  private isMine(idx: number): boolean {
+    return this.board[idx] === boardState.mine;
   }
 
-  public isEmpty(x: number, y: number): boolean {
-    return this.board[y][x] === boardState.empty;
+  private isEmpty(idx: number): boolean {
+    return this.board[idx] === boardState.empty;
   }
 
-  public isHidden(x: number, y: number): boolean {
+  private isHidden(idx: number): boolean {
     return (
-      this.cover[y][x] === coverState.hidden ||
-      this.cover[y][x] === coverState.flagged
+      this.cover[idx] === coverState.hidden ||
+      this.cover[idx] === coverState.flagged
     );
   }
 
-  public isFlagged(x: number, y: number): boolean {
-    return this.cover[y][x] === coverState.flagged;
+  private isFlagged(idx: number): boolean {
+    return this.cover[idx] === coverState.flagged;
   }
 
-  public isRevealed(x: number, y: number): boolean {
-    return this.cover[y][x] === coverState.revealed;
+  private isRevealed(idx: number): boolean {
+    return this.cover[idx] === coverState.revealed;
   }
 
-  public isWon(): boolean {
-    return this.cover.every((row, y) =>
-      row.every((_, x) => this.isHidden(x, y) === this.isMine(x, y))
+  private isWon(): boolean {
+    return this.cover.every(
+      (_, idx) => this.isHidden(idx) === this.isMine(idx)
     );
-  }
-
-  public clearTimer(): void {
-    clearInterval(this.timerId);
   }
 
   private flagMines(): void {
-    this.cover = this.cover.map((row, y) =>
-      row.map((cell, x) => (this.isMine(x, y) ? coverState.flagged : cell))
+    this.cover = this.cover.map((cell, idx) =>
+      this.isMine(idx) ? coverState.flagged : cell
     );
   }
 
   private revealMines(): void {
-    this.cover = this.cover.map((row, y) =>
-      row.map((cell, x) => (this.isMine(x, y) ? coverState.revealed : cell))
+    this.cover = this.cover.map((cell, idx) =>
+      this.isMine(idx) ? coverState.revealed : cell
     );
   }
 
-  private initBoard(x: number, y: number): void {
-    const mines = this.mineNum;
+  private initBoard(idx: number): void {
+    const mines = this.mines;
     const width = this.width;
     const height = this.height;
 
     const minePositions = new Set<number>();
     while (minePositions.size < mines) {
-      const mine = Math.floor(Math.random() * width * height);
-      if (mine !== x + y * width) {
-        minePositions.add(mine);
+      const pos = Math.floor(Math.random() * width * height);
+      if (pos !== idx) {
+        minePositions.add(pos);
       }
     }
 
-    for (let i = 0; i < width; i++) {
-      for (let j = 0; j < height; j++) {
-        if (minePositions.has(i + j * width)) {
-          this.board[j][i] = boardState.mine;
-        }
-      }
-    }
-
-    for (let i = 0; i < width; i++) {
-      for (let j = 0; j < height; j++) {
-        if (this.board[j][i] !== boardState.mine) {
-          continue;
-        }
-        for (let k = -1; k <= 1; k++) {
-          for (let l = -1; l <= 1; l++) {
+    for (let i = 0; i < width * height; i++) {
+      if (minePositions.has(i)) {
+        this.board[i] = boardState.mine;
+        for (const k of [-width, 0, width]) {
+          for (const l of [-1, 0, 1]) {
+            const pos = i + k + l;
+            const x = i % width;
             if (
-              i + k >= 0 &&
-              i + k < width &&
-              j + l >= 0 &&
-              j + l < height &&
-              this.board[j + l][i + k] !== boardState.mine
+              pos >= 0 &&
+              pos < width * height &&
+              (x !== 0 || l !== -1) &&
+              (x !== width - 1 || l !== 1) &&
+              !this.isMine(pos)
             ) {
-              this.board[j + l][i + k]++;
+              this.board[pos]++;
             }
           }
         }
@@ -283,9 +271,3 @@ export class Minesweeper {
   }
 }
 // ------------------------------------------------
-
-const array2d = <T>(width: number, height: number, value: T) => {
-  return Array.from({ length: height }, () =>
-    Array.from({ length: width }, () => value)
-  );
-};

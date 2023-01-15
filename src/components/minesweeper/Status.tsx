@@ -73,8 +73,8 @@ export const Status = () => {
 
   const elapsed = minesweeper.elapsed;
   const remainingMines = useMemo(() => {
-    const mines = minesweeper.mineNum;
-    const flags = minesweeper.flagCount;
+    const mines = minesweeper.mines;
+    const flags = minesweeper.flags;
     return mines - flags;
   }, [minesweeper]);
 

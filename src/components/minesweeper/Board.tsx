@@ -24,19 +24,13 @@ export const Board = () => {
   const height = minesweeper.height;
   const board = minesweeper.display;
 
-  const reveal = (index: number) => {
-    const x = index % width;
-    const y = Math.floor(index / width);
-
-    const newBoard = minesweeper.reveal(x, y);
+  const reveal = (idx: number) => {
+    const newBoard = minesweeper.reveal(idx);
     setMinesweeper(newBoard);
   };
 
-  const toggleFlag = (index: number) => {
-    const x = index % width;
-    const y = Math.floor(index / width);
-
-    const newBoard = minesweeper.toggleFlag(x, y);
+  const toggleFlag = (idx: number) => {
+    const newBoard = minesweeper.toggleFlag(idx);
     setMinesweeper(newBoard);
   };
 
@@ -46,7 +40,7 @@ export const Board = () => {
       height={height}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {board.flat().map((cell, idx) => {
+      {board.map((cell, idx) => {
         switch (cell) {
           case displayState.hidden:
             return (
