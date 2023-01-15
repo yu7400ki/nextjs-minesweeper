@@ -3,7 +3,7 @@ import { Minesweeper } from "@/minesweeper";
 
 const width = 30;
 const height = 16;
-const mines = 30;
+const mines = 60;
 
 const minesweeperAtom = atom(new Minesweeper(width, height, mines));
 
