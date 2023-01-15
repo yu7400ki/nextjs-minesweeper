@@ -19,7 +19,7 @@ export const RevealedTile = styled.div<{ state: DisplayState }>`
     pointer-events: none;
     ${(props) => {
       switch (props.state) {
-        case displayState.empty:
+        case displayState.zero:
           return ``;
         case displayState.mine:
           return `

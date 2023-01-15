@@ -11,7 +11,7 @@ export type GameStatus = (typeof gameStatus)[keyof typeof gameStatus];
 
 // boardState -------------------------------------
 export const boardState = {
-  empty: 0,
+  zero: 0,
   1: 1,
   2: 2,
   3: 3,
@@ -64,7 +64,7 @@ export class Minesweeper {
 
     this.gameStatus = gameStatus.notStarted;
     this.cover = Array(width * height).fill(coverState.hidden);
-    this.board = Array(width * height).fill(boardState.empty);
+    this.board = Array(width * height).fill(boardState.zero);
     this.width = width;
     this.height = height;
     this.mines = mines;
@@ -103,7 +103,7 @@ export class Minesweeper {
 
     const width = clone.width;
     const height = clone.height;
-    if (clone.isEmpty(idx)) {
+    if (clone.isZero(idx)) {
       const stack = [idx];
       while (stack.length > 0) {
         const idx = stack.pop()!;
@@ -119,7 +119,7 @@ export class Minesweeper {
               clone.isHidden(pos)
             ) {
               clone.cover[pos] = coverState.revealed;
-              if (clone.isEmpty(pos)) {
+              if (clone.isZero(pos)) {
                 stack.push(pos);
               }
             }
@@ -198,8 +198,8 @@ export class Minesweeper {
     return this.board[idx] === boardState.mine;
   }
 
-  private isEmpty(idx: number): boolean {
-    return this.board[idx] === boardState.empty;
+  private isZero(idx: number): boolean {
+    return this.board[idx] === boardState.zero;
   }
 
   private isHidden(idx: number): boolean {
