@@ -22,7 +22,7 @@ export const Board = () => {
 
   const width = minesweeper.width;
   const height = minesweeper.height;
-  const board = minesweeper.display();
+  const board = minesweeper.display;
 
   const reveal = (index: number) => {
     const x = index % width;

@@ -36,11 +36,20 @@ export const displayState = {
 export type DisplayState = (typeof displayState)[keyof typeof displayState];
 // ------------------------------------------------
 
+// coverState -------------------------------------
+export const coverState = {
+  hidden: 0,
+  flagged: 1,
+  revealed: 2,
+} as const;
+
+export type CoverState = (typeof coverState)[keyof typeof coverState];
+// ------------------------------------------------
+
 // Minesweeper ------------------------------------
 export class Minesweeper {
   private gameStatus: GameStatus;
-  private flagged: boolean[][];
-  private hidden: boolean[][];
+  private cover: CoverState[][];
   private board: BoardState[][];
   private elapsedTime: number;
   private timerId: number;
@@ -54,8 +63,7 @@ export class Minesweeper {
     }
 
     this.gameStatus = gameStatus.notStarted;
-    this.flagged = array2d(width, height, false);
-    this.hidden = array2d(width, height, true);
+    this.cover = array2d(width, height, coverState.hidden);
     this.board = array2d(width, height, boardState.empty);
     this.width = width;
     this.height = height;
@@ -83,11 +91,11 @@ export class Minesweeper {
       return clone;
     }
 
-    if (clone.flagged[y][x] || !this.hidden[y][x]) {
+    if (clone.isFlagged(x, y) || clone.isRevealed(x, y)) {
       return clone;
     }
 
-    clone.hidden[y][x] = false;
+    clone.cover[y][x] = coverState.revealed;
     if (clone.isMine(x, y)) {
       clone.gameStatus = gameStatus.lost;
       clone.revealMines();
@@ -105,9 +113,9 @@ export class Minesweeper {
               x + k < clone.width &&
               y + l >= 0 &&
               y + l < clone.height &&
-              clone.hidden[y + l][x + k]
+              clone.isHidden(x + k, y + l)
             ) {
-              clone.hidden[y + l][x + k] = false;
+              clone.cover[y + l][x + k] = coverState.revealed;
               if (clone.isEmpty(x + k, y + l)) {
                 queue.push([x + k, y + l]);
               }
@@ -122,8 +130,6 @@ export class Minesweeper {
       clone.flagMines();
     }
 
-    clone.removeRevealedFlags();
-
     return clone;
   }
 
@@ -135,18 +141,34 @@ export class Minesweeper {
       clone.gameStatus = gameStatus.inProgress;
     }
 
-    if (clone.gameStatus === gameStatus.inProgress) {
-      clone.flagged[y][x] = !clone.flagged[y][x];
+    switch (clone.cover[y][x]) {
+      case coverState.hidden:
+        clone.cover[y][x] = coverState.flagged;
+        break;
+      case coverState.flagged:
+        clone.cover[y][x] = coverState.hidden;
+        break;
+      default:
+        break;
     }
 
     return clone;
   }
 
-  public display(): DisplayState[][] {
+  public clone(): Minesweeper {
+    const clone = new Minesweeper(this.width, this.height, this.mineNum);
+    clone.gameStatus = this.gameStatus;
+    clone.cover = this.cover.map((row) => row.slice());
+    clone.board = this.board.map((row) => row.slice());
+    clone.elapsedTime = this.elapsedTime;
+    return clone;
+  }
+
+  public get display(): DisplayState[][] {
     return this.board.map((row, y) =>
       row.map((cell, x) => {
-        if (this.hidden[y][x]) {
-          return this.flagged[y][x]
+        if (this.isHidden(x, y)) {
+          return this.isFlagged(x, y)
             ? displayState.flagged
             : displayState.hidden;
         } else {
@@ -156,23 +178,14 @@ export class Minesweeper {
     );
   }
 
-  public clone(): Minesweeper {
-    const clone = new Minesweeper(this.width, this.height, this.mineNum);
-    clone.gameStatus = this.gameStatus;
-    clone.flagged = this.flagged.map((row) => row.slice());
-    clone.hidden = this.hidden.map((row) => row.slice());
-    clone.board = this.board.map((row) => row.slice());
-    clone.elapsedTime = this.elapsedTime;
-    return clone;
-  }
-
   public get status(): GameStatus {
     return this.gameStatus;
   }
 
   public get flagCount(): number {
-    return this.flagged.reduce(
-      (count, row) => count + row.filter((cell) => cell).length,
+    return this.cover.reduce(
+      (count, row) =>
+        count + row.filter((cell) => cell === coverState.flagged).length,
       0
     );
   }
@@ -189,9 +202,24 @@ export class Minesweeper {
     return this.board[y][x] === boardState.empty;
   }
 
+  public isHidden(x: number, y: number): boolean {
+    return (
+      this.cover[y][x] === coverState.hidden ||
+      this.cover[y][x] === coverState.flagged
+    );
+  }
+
+  public isFlagged(x: number, y: number): boolean {
+    return this.cover[y][x] === coverState.flagged;
+  }
+
+  public isRevealed(x: number, y: number): boolean {
+    return this.cover[y][x] === coverState.revealed;
+  }
+
   public isWon(): boolean {
-    return this.hidden.every((row, y) =>
-      row.every((cell, x) => cell === this.isMine(x, y))
+    return this.cover.every((row, y) =>
+      row.every((_, x) => this.isHidden(x, y) === this.isMine(x, y))
     );
   }
 
@@ -200,21 +228,14 @@ export class Minesweeper {
   }
 
   private flagMines(): void {
-    this.flagged = this.flagged.map((row, y) =>
-      row.map((cell, x) => cell || this.isMine(x, y))
+    this.cover = this.cover.map((row, y) =>
+      row.map((cell, x) => (this.isMine(x, y) ? coverState.flagged : cell))
     );
   }
 
   private revealMines(): void {
-    this.hidden = this.hidden.map((row, y) =>
-      row.map((cell, x) => cell && !this.isMine(x, y))
-    );
-    this.removeRevealedFlags();
-  }
-
-  private removeRevealedFlags(): void {
-    this.flagged = this.flagged.map((row, y) =>
-      row.map((cell, x) => cell && this.hidden[y][x])
+    this.cover = this.cover.map((row, y) =>
+      row.map((cell, x) => (this.isMine(x, y) ? coverState.revealed : cell))
     );
   }
 
